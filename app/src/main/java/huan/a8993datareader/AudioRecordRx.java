@@ -16,7 +16,8 @@ public class AudioRecordRx {
     AudioRecordRxThread audioRecordRxThread = null;
     DecoderRx decoderRx = new DecoderRx();
     public static AudioRecord audioRecord;
-    public static int minAudioRecordRxBufSize = AudioRecord.getMinBufferSize(sampleRate, audioRecordRxChannel,audioRecordRxFormat);
+    //public static int minAudioRecordRxBufSize = AudioRecord.getMinBufferSize(sampleRate, audioRecordRxChannel,audioRecordRxFormat);
+    public static int minAudioRecordRxBufSize=1024*24;
     public static int audioRecordRxBufSize = minAudioRecordRxBufSize * 4;
     short[] audioRecordRxBuf=new short[minAudioRecordRxBufSize];
 

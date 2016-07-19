@@ -5,6 +5,8 @@ package huan.a8993datareader;
         import android.media.AudioRecord;
         import android.os.Bundle;
         import android.os.Message;
+        import android.util.Log;
+
 public class DecoderRx {
 
 
@@ -61,7 +63,7 @@ public class DecoderRx {
                         {
                             currentSampleBit = 0;//Galaxy SII(Samsung)
                             //currentSampleBit = 1;//XiaoMi(MIUI)
-                            if(_1_Counter>=1000&&counter_i<3095)
+                            if(_1_Counter>=500&&counter_i<23576)
                             {
                                 StartBitFlg=true;
                                 startIndex=counter_i;
@@ -124,18 +126,29 @@ public class DecoderRx {
                             int k=0;
                             for(int i=0;i<=j&&k<72*2;i++)
                             {
-                                if(BitTimeArray[i]<=8)
+                                try
                                 {
-                                    SBitArray[k]=BitArray[i];
-                                    k++;
+                                    if(BitTimeArray[i]<=8)
+                                    {
+                                        SBitArray[k]=BitArray[i];
+                                        k++;
+                                    }
+                                    else
+                                    {
+                                        SBitArray[k]=BitArray[i];
+                                        k++;
+                                        SBitArray[k]=BitArray[i];
+                                        k++;
+                                    }
                                 }
-                                else
+                                catch (ArrayIndexOutOfBoundsException ex)
                                 {
-                                    SBitArray[k]=BitArray[i];
-                                    k++;
-                                    SBitArray[k]=BitArray[i];
-                                    k++;
+                                    k=0;
+                                    Log.d(null, "ArrayIndexOutOfBoundsException");
+                                    break;
+
                                 }
+
                             }
                             if(k==72*2)
                             {
