@@ -12,7 +12,7 @@ public class DecoderRx {
 
     private int  counter_i = 0;
     private int  startIndex=0;
-    public short highValue=-500;	//0-1阀值
+    public short highValue=6553;	//0-1阀值、反向小于500=1，大于500 0。
 
     short _1_Counter=0,_0_Counter=0;
 
@@ -45,44 +45,108 @@ public class DecoderRx {
                 }
                 else
                 {
-                    if(_0_Counter>10000)_0_Counter=0;
-                    if(_1_Counter>10000)_1_Counter=0;
+                    int dataBitStatus=0;//0 无效，1同相 2反相
+                    int highCounter=0,mindCounter=0,lowCounter=0;
+                    for(int idex=0;idex<audioRxBufLength;idex++)
+                    {
+                        short sampleValue = audioRxBuf[idex];
+                        if(sampleValue>highValue)
+                        {
+                            if(mindCounter>500)
+                            {
+                                dataBitStatus=2;
+                            }
+                            highCounter++;
+                            mindCounter=0;
+                            lowCounter=0;
+                        }
+                        else if(sampleValue < -1*highValue)
+                        {
+                            if(mindCounter>500)
+                            {
+                                dataBitStatus=1;
+                            }
+                            lowCounter++;
+                            mindCounter=0;
+                            highCounter=0;
+                        }
+                        else
+                        {
+                            mindCounter++;
+                            highCounter=0;
+                            lowCounter=0;
+                        }
+                    }
+                    _0_Counter=0;
+                    _1_Counter=0;
                     int dataBitPtr=0;
                     boolean StartBitFlg=false;
-                    for(counter_i=0;counter_i<audioRxBufLength;counter_i++)
+                    if(dataBitStatus==2)
                     {
-                        short sampleValue = audioRxBuf[counter_i];
-                        if(sampleValue > highValue)
+                        for (counter_i = 0; counter_i < audioRxBufLength; counter_i++)
                         {
-                            currentSampleBit =1;//Galaxy SII(Samsung)
-    						//currentSampleBit = 0;//XiaoMi(MIUI)
-                            _0_Counter=0;
-                            _1_Counter++;
-                        }
-                        else if(sampleValue < highValue)
-                        {
-                            currentSampleBit = 0;//Galaxy SII(Samsung)
-                            //currentSampleBit = 1;//XiaoMi(MIUI)
-                            if(_1_Counter>=500&&counter_i<23576)
+                            short sampleValue = audioRxBuf[counter_i];
+                            if (sampleValue < highValue)
                             {
-                                StartBitFlg=true;
-                                startIndex=counter_i;
-                            }
-                            _1_Counter=0;
-                            _0_Counter++;
-                        }
-                        if(StartBitFlg)
-                        {
-                            if(dataBitPtr<1000)
+                                currentSampleBit = 1;
+                                _0_Counter = 0;
+                                _1_Counter++;
+                            } else
                             {
-                                dataBitBuf[dataBitPtr]=currentSampleBit;
-                                dataBitPtr++;
+                                currentSampleBit = 0;
+                                if (_1_Counter >= 500 && counter_i < 23570)
+                                {
+                                    StartBitFlg = true;
+                                    startIndex = counter_i;
+                                }
+                                _1_Counter = 0;
+                                _0_Counter++;
                             }
+                            if(StartBitFlg)
+                            {
+                                if(dataBitPtr<1000)
+                                {
+                                    dataBitBuf[dataBitPtr]=currentSampleBit;
+                                    dataBitPtr++;
+                                }
 
+                            }
                         }
-
-
                     }
+                    if(dataBitStatus==1)
+                    {
+                        for(counter_i=0;counter_i<audioRxBufLength;counter_i++)
+                        {
+                            short sampleValue = audioRxBuf[counter_i];
+                            if(sampleValue > -1* highValue)
+                            {
+                                currentSampleBit =1;
+                                _0_Counter=0;
+                                _1_Counter++;
+                            }
+                            else
+                            {
+                                currentSampleBit = 0;
+                                if(_1_Counter>=500&&counter_i<23570)
+                                {
+                                    StartBitFlg=true;
+                                    startIndex=counter_i;
+                                }
+                                _1_Counter=0;
+                                _0_Counter++;
+                            }
+                            if(StartBitFlg)
+                            {
+                                if(dataBitPtr<1000)
+                                {
+                                    dataBitBuf[dataBitPtr]=currentSampleBit;
+                                    dataBitPtr++;
+                                }
+
+                            }
+                        }
+                    }
+
                     if(StartBitFlg)
                     {
                         short[] BitArray=new short[72*2];
@@ -90,7 +154,7 @@ public class DecoderRx {
                         short tempBit=0;
                         int j=0;
                         short datacounter=0;
-                        for(int i=0;i<999;i++)
+                        for(int i=0;i<955;i++)//i 控制取样长度
                         {
                             if(dataBitBuf[i]==dataBitBuf[i+1])
                             {
@@ -103,11 +167,12 @@ public class DecoderRx {
                                 datacounter=0;
                                 j++;
                             }
-                            if(i==998)
+                            if(i==954)
                             {
                                 BitArray[j]=dataBitBuf[i];
                                 if(datacounter>8)datacounter=8;
                                 BitTimeArray[j]=datacounter;
+                                //j++;
                             }
                         }
                         boolean isDataTrue=true;
@@ -150,7 +215,7 @@ public class DecoderRx {
                                 }
 
                             }
-                            if(k==72*2)
+                            if(k==(72*2))
                             {
                                 k=0;
                                 isDataTrue=true;
