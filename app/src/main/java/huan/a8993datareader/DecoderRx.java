@@ -267,6 +267,10 @@ public class DecoderRx {
                                         _8993Bat+=(mqstDataBit[dataIndex]<<(15-i));
                                         dataIndex++;
                                     }
+                                    if(_8993Bat<0)_8993Bat=(short) ((_8993Bat* (-1))-1);
+                                    if(_8993Rh<0)_8993Rh=(short)((_8993Rh* (-1))-1);
+                                    if(_8993Tair<0)_8993Tair=(short)((_8993Tair* (-1))-1);
+                                    if(_8993Vel<0)_8993Vel=(short)((_8993Vel* (-1))-1);
 
 
 
